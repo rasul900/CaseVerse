@@ -1,5 +1,4 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import type { Request } from 'express';
 
 export type TelegramWebAppUser = {
   id: number;
@@ -8,6 +7,16 @@ export type TelegramWebAppUser = {
   username?: string;
   language_code?: string;
 };
+
+type HeaderBag = {
+  headers: Record<string, string | string[] | undefined>;
+};
+
+function header(req: HeaderBag, name: string): string {
+  const v = req.headers[name] ?? req.headers[name.toLowerCase()];
+  if (Array.isArray(v)) return v[0] ?? '';
+  return v ?? '';
+}
 
 function parseInitData(initData: string, botToken: string): TelegramWebAppUser {
   const params = new URLSearchParams(initData);
@@ -42,13 +51,8 @@ function parseInitData(initData: string, botToken: string): TelegramWebAppUser {
 
 export type AuthUser = { id: string; username?: string };
 
-/**
- * Resolve player:
- * 1) Valid Telegram WebApp initData (production)
- * 2) x-user-id header when ALLOW_DEMO_USER=1 or non-production
- */
-export function resolveAuth(req: Request): AuthUser {
-  const initData = String(req.headers['x-telegram-init-data'] ?? '');
+export function resolveAuth(req: HeaderBag): AuthUser {
+  const initData = header(req, 'x-telegram-init-data');
   const botToken = process.env.BOT_TOKEN;
 
   if (initData && botToken) {
@@ -62,12 +66,12 @@ export function resolveAuth(req: Request): AuthUser {
   const allowDemo =
     process.env.ALLOW_DEMO_USER === '1' || process.env.NODE_ENV !== 'production';
   if (allowDemo) {
-    return { id: String(req.headers['x-user-id'] ?? 'demo-user') };
+    return { id: header(req, 'x-user-id') || 'demo-user' };
   }
 
   throw new Error('Telegram auth required (open via Mini App)');
 }
 
-export function resolveUserId(req: Request): string {
+export function resolveUserId(req: HeaderBag): string {
   return resolveAuth(req).id;
 }

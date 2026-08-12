@@ -28,16 +28,26 @@ git remote add origin https://github.com/USER/REPO.git
 git push -u origin main
 ```
 
-## 3) Vercel Environment Variables
+## 3) Vercel sozlamalari (muhim)
 
-Vercel → Project → Settings → Environment Variables:
+Import / Settings → Build & Development Settings:
+
+| Setting | Qiymat |
+|---|---|
+| Framework Preset | **Other** |
+| Root Directory | bo'sh (repo root) |
+| Build Command | `npm run build:web` (Override ON) |
+| Output Directory | `apps/web/dist` (Override ON) |
+| Install Command | `npm install` |
+
+Environment Variables:
 
 | Name | Value |
 |---|---|
 | `BOT_TOKEN` | BotFather token |
 | `WEBAPP_URL` | `https://YOUR-PROJECT.vercel.app` |
 | `SETUP_SECRET` | uzun random parol |
-| `ALLOW_DEMO_USER` | `0` (production) |
+| `ALLOW_DEMO_USER` | `0` |
 
 Deploy qiling.
 

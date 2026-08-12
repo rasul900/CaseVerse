@@ -12,7 +12,7 @@ import {
   quoteUpgrade,
 } from './store.js';
 import { handleTelegramUpdate } from './bot.js';
-import { resolveAuth, resolveUserId } from './auth.js';
+import { resolveAuth } from './auth.js';
 
 export function createApp() {
   const app = express();

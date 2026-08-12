@@ -7,15 +7,31 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:web": "npm run dev --workspace=@caseverse/web",
+    "dev:web": "vite",
     "dev:api": "npm run dev --workspace=@caseverse/api",
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run build:web",
+    "build:web": "vite build",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "bot:setup": "node scripts/setup-bot.mjs",
-    "vercel-build": "npm run build --workspace=@caseverse/web"
+    "bot:setup": "node scripts/setup-bot.mjs"
+  },
+  "dependencies": {
+    "@caseverse/shared": "*",
+    "@twa-dev/sdk": "^8.0.2",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "framer-motion": "^12.5.0",
+    "nanoid": "^5.1.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@vercel/node": "^5.2.1"
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vercel/node": "^5.2.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2"
   },
   "engines": {
     "node": ">=20"
