@@ -34,17 +34,27 @@ export default function MiniApp() {
   }
 
   useEffect(() => {
-    void import('@twa-dev/sdk')
-      .then((mod) => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const mod = await import('@twa-dev/sdk');
         const WebApp = mod.default;
         WebApp.ready();
         WebApp.expand();
         WebApp.setHeaderColor('#071018');
-      })
-      .catch(() => {
+      } catch {
         /* browser preview */
-      });
-    refresh().catch((e) => setError(e.message));
+      }
+      if (cancelled) return;
+      try {
+        await refresh();
+      } catch (e) {
+        if (!cancelled) setError((e as Error).message);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

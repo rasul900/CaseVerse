@@ -39,6 +39,10 @@ export function resolveAuth(headers: Headers): AuthUser {
   const initData = header(headers, 'x-telegram-init-data');
   const botToken = process.env.BOT_TOKEN;
 
+  if (initData && !botToken) {
+    throw new Error('Server BOT_TOKEN not configured');
+  }
+
   if (initData && botToken) {
     const user = parseInitData(initData, botToken);
     return {

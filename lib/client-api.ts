@@ -16,8 +16,18 @@ function telegramInitData(): string {
   }
 }
 
+async function waitForInitData(timeoutMs = 2500): Promise<string> {
+  const start = Date.now();
+  let data = telegramInitData();
+  while (!data && Date.now() - start < timeoutMs) {
+    await new Promise((r) => setTimeout(r, 50));
+    data = telegramInitData();
+  }
+  return data;
+}
+
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const initData = telegramInitData();
+  const initData = await waitForInitData();
   const res = await fetch(path, {
     ...init,
     headers: {
