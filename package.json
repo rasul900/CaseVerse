@@ -1,0 +1,23 @@
+{
+  "name": "caseverse",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=@caseverse/web",
+    "dev:api": "npm run dev --workspace=@caseverse/api",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "bot:setup": "node scripts/setup-bot.mjs",
+    "vercel-build": "npm run build --workspace=@caseverse/web"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.2.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
