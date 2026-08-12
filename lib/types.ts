@@ -6,15 +6,6 @@ export type Rarity =
   | 'legendary'
   | 'mythic';
 
-export const RARITY_ORDER: Rarity[] = [
-  'common',
-  'uncommon',
-  'rare',
-  'epic',
-  'legendary',
-  'mythic',
-];
-
 export const RARITY_COLORS: Record<Rarity, string> = {
   common: '#9AA3B2',
   uncommon: '#3DDC97',
@@ -33,17 +24,7 @@ export const RARITY_LABELS: Record<Rarity, string> = {
   mythic: 'Mythic',
 };
 
-/** Target drop rate bands from TZ (midpoints used for demo pools). */
-export const RARITY_TARGET_RATES: Record<Rarity, number> = {
-  common: 0.65,
-  uncommon: 0.22,
-  rare: 0.085,
-  epic: 0.03,
-  legendary: 0.012,
-  mythic: 0.003,
-};
-
-export const HOUSE_EDGE_TARGET = 0.88; // EV / casePrice
+export const HOUSE_EDGE_TARGET = 0.88;
 export const MARKET_FEE_RATE = 0.05;
 export const PITY_THRESHOLD = 20;
 export const PITY_BONUS = 0.015;
@@ -53,8 +34,6 @@ export interface ItemDef {
   name: string;
   rarity: Rarity;
   basePrice: number;
-  image?: string;
-  float?: number;
   caseId?: string;
 }
 
@@ -63,7 +42,6 @@ export interface CaseDef {
   name: string;
   price: number;
   description: string;
-  image?: string;
   limited?: boolean;
   items: ItemDef[];
 }
@@ -89,6 +67,14 @@ export interface UserState {
   clientSeed: string;
 }
 
+export interface MarketListing {
+  id: string;
+  sellerId: string;
+  instance: InventoryItem;
+  price: number;
+  createdAt: string;
+}
+
 export interface OpenCaseResult {
   success: true;
   instance: InventoryItem;
@@ -102,14 +88,6 @@ export interface OpenCaseResult {
   pityCounter: number;
 }
 
-export interface UpgradeQuote {
-  successChance: number;
-  inputValue: number;
-  targetValue: number;
-  multiplier: number;
-  houseEdgeApplied: boolean;
-}
-
 export interface UpgradeResult {
   success: boolean;
   successChance: number;
@@ -118,12 +96,4 @@ export interface UpgradeResult {
   wonItem?: InventoryItem;
   lostInstanceIds: string[];
   coinsLeft: number;
-}
-
-export interface MarketListing {
-  id: string;
-  sellerId: string;
-  instance: InventoryItem;
-  price: number;
-  createdAt: string;
 }

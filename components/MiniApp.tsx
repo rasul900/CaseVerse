@@ -1,24 +1,22 @@
+'use client';
+
 import { useEffect, useState } from 'react';
-import WebApp from '@twa-dev/sdk';
-import type { InventoryItem, ItemDef, MarketListing, OpenCaseResult, UserState } from '@caseverse/shared';
-import { client, type CaseCard } from './api';
-import { formatCoins, rarityColor, rarityLabel } from './lib';
-import { CaseOpenModal } from './components/CaseOpenModal';
-import { UpgradeWheel } from './components/UpgradeWheel';
-import './styles.css';
+import type { InventoryItem, ItemDef, MarketListing, OpenCaseResult, UserState } from '@/lib/types';
+import { client, type CaseCard } from '@/lib/client-api';
+import { formatCoins, rarityColor, rarityLabel } from '@/lib/format';
+import { CaseOpenModal } from '@/components/CaseOpenModal';
+import { UpgradeWheel } from '@/components/UpgradeWheel';
 
 type Tab = 'cases' | 'upgrade' | 'inventory' | 'market';
 
-export default function App() {
+export default function MiniApp() {
   const [tab, setTab] = useState<Tab>('cases');
   const [user, setUser] = useState<UserState | null>(null);
   const [cases, setCases] = useState<CaseCard[]>([]);
   const [error, setError] = useState<string | null>(null);
-
   const [opening, setOpening] = useState<CaseCard | null>(null);
   const [openResult, setOpenResult] = useState<OpenCaseResult | null>(null);
   const [spinning, setSpinning] = useState(false);
-
   const [selected, setSelected] = useState<string[]>([]);
   const [targets, setTargets] = useState<ItemDef[]>([]);
   const [targetId, setTargetId] = useState('');
@@ -26,7 +24,6 @@ export default function App() {
   const [upSpinning, setUpSpinning] = useState(false);
   const [stopAngle, setStopAngle] = useState<number | null>(null);
   const [upOutcome, setUpOutcome] = useState<'win' | 'lose' | null>(null);
-
   const [market, setMarket] = useState<MarketListing[]>([]);
   const [rarityFilter, setRarityFilter] = useState('');
 
@@ -37,13 +34,16 @@ export default function App() {
   }
 
   useEffect(() => {
-    try {
-      WebApp.ready();
-      WebApp.expand();
-      WebApp.setHeaderColor('#071018');
-    } catch {
-      /* browser preview */
-    }
+    void import('@twa-dev/sdk')
+      .then((mod) => {
+        const WebApp = mod.default;
+        WebApp.ready();
+        WebApp.expand();
+        WebApp.setHeaderColor('#071018');
+      })
+      .catch(() => {
+        /* browser preview */
+      });
     refresh().catch((e) => setError(e.message));
   }, []);
 
@@ -111,15 +111,12 @@ export default function App() {
   }
 
   function toggleSelect(id: string) {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
   async function sellItem(item: InventoryItem) {
-    const price = Math.max(1, Math.round(item.basePrice * 0.95));
     try {
-      await client.listItem(item.instanceId, price);
+      await client.listItem(item.instanceId, Math.max(1, Math.round(item.basePrice * 0.95)));
       await refresh();
       if (tab === 'market') {
         const q = new URLSearchParams();
@@ -148,7 +145,11 @@ export default function App() {
       <div className="brand-bar">
         <div className="brand">CASEVERSE</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {user?.username && <span className="muted" style={{ fontSize: 13 }}>@{user.username}</span>}
+          {user?.username && (
+            <span className="muted" style={{ fontSize: 13 }}>
+              @{user.username}
+            </span>
+          )}
           <div className="coins">{formatCoins(user?.coins ?? 0)}</div>
         </div>
       </div>
@@ -171,7 +172,11 @@ export default function App() {
                 <p>{c.description}</p>
                 <div className="case-meta">
                   <span className="price">{c.price} coin</span>
-                  {c.limited ? <span className="badge">Limited</span> : <span className="muted">{c.itemCount} items</span>}
+                  {c.limited ? (
+                    <span className="badge">Limited</span>
+                  ) : (
+                    <span className="muted">{c.itemCount} items</span>
+                  )}
                 </div>
               </button>
             ))}
@@ -182,7 +187,7 @@ export default function App() {
       {tab === 'upgrade' && (
         <>
           <p className="section-title">Upgrade</p>
-          <p className="muted">Itemlarni tanlang → maqsadni tanlang → g‘ildirak aylanadi.</p>
+          <p className="muted">Itemlarni tanlang → maqsad → g‘ildirak.</p>
           <UpgradeWheel chance={chance} spinning={upSpinning} stopAngle={stopAngle} />
           {upOutcome && (
             <div className={`result-banner ${upOutcome}`}>
@@ -218,7 +223,7 @@ export default function App() {
                 <div>
                   <h4>{item.name}</h4>
                   <div className="sub">
-                    {rarityLabel(item.rarity)} · {item.basePrice} · float {item.float}
+                    {rarityLabel(item.rarity)} · {item.basePrice}
                   </div>
                 </div>
                 <input
@@ -298,16 +303,14 @@ export default function App() {
                 </div>
                 <div>
                   <h4>{l.instance.name}</h4>
-                  <div className="sub">
-                    {l.price} coin · fee 5%
-                  </div>
+                  <div className="sub">{l.price} coin · fee 5%</div>
                 </div>
                 <button className="btn" onClick={() => buyListing(l.id)}>
                   Sotib ol
                 </button>
               </div>
             ))}
-            {!market.length && <div className="empty">Hozircha listing yo‘q — inventardan soting</div>}
+            {!market.length && <div className="empty">Listing yo‘q</div>}
           </div>
         </>
       )}

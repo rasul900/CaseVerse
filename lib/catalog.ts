@@ -1,5 +1,5 @@
-import type { CaseDef, ItemDef } from './types.js';
-import { assertCaseEvHealthy } from './rng.js';
+import type { CaseDef, ItemDef } from './types';
+import { assertCaseEvHealthy } from './rng';
 
 function item(
   id: string,
@@ -11,10 +11,6 @@ function item(
   return { id, name, rarity, basePrice, caseId };
 }
 
-/**
- * Prices tuned so weighted EV ≈ 88% of case price (house edge).
- * Rarity weights: C65 / U22 / R8.5 / E3 / L1.2 / M0.3
- */
 export const DEMO_CASES: CaseDef[] = [
   {
     id: 'neon-breach',
@@ -68,22 +64,19 @@ export const DEMO_CASES: CaseDef[] = [
   },
 ];
 
-for (const c of DEMO_CASES) {
-  assertCaseEvHealthy(c, 0.08);
-}
+for (const c of DEMO_CASES) assertCaseEvHealthy(c);
 
-export function getCaseById(id: string): CaseDef | undefined {
+export function getCaseById(id: string) {
   return DEMO_CASES.find((c) => c.id === id);
 }
 
-export function getItemById(id: string): ItemDef | undefined {
+export function getItemById(id: string) {
   for (const c of DEMO_CASES) {
     const found = c.items.find((i) => i.id === id);
     if (found) return found;
   }
-  return undefined;
 }
 
-export function allItems(): ItemDef[] {
+export function allItems() {
   return DEMO_CASES.flatMap((c) => c.items);
 }

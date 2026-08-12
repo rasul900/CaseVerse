@@ -1,3 +1,8 @@
+/**
+ * Telegram bot — alohida modul.
+ * Webhook: POST /api/telegram
+ * Setup:   GET  /api/bot/setup?secret=SETUP_SECRET
+ */
 const TELEGRAM_API = 'https://api.telegram.org';
 
 function token(): string {
@@ -8,7 +13,7 @@ function token(): string {
 
 function webAppUrl(): string {
   const url = process.env.WEBAPP_URL?.replace(/\/$/, '');
-  if (!url) throw new Error('WEBAPP_URL is not set (e.g. https://caseverse.vercel.app)');
+  if (!url) throw new Error('WEBAPP_URL is not set');
   return url;
 }
 
@@ -23,14 +28,13 @@ async function tg<T>(method: string, body?: unknown): Promise<T> {
   return data.result;
 }
 
-type TgUpdate = {
+export type TgUpdate = {
   update_id: number;
   message?: {
-    chat: { id: number; type: string };
+    chat: { id: number };
     text?: string;
     from?: { id: number; first_name?: string; username?: string };
   };
-  callback_query?: unknown;
 };
 
 export async function handleTelegramUpdate(update: TgUpdate): Promise<void> {
@@ -49,27 +53,21 @@ export async function handleTelegramUpdate(update: TgUpdate): Promise<void> {
   if (text.startsWith('/help')) {
     await tg('sendMessage', {
       chat_id: chatId,
-      text:
-        'CaseVerse buyruqlari:\n' +
-        '/start — Mini Appni ochish\n' +
-        '/help — yordam',
+      text: 'CaseVerse:\n/start — Mini App\n/help — yordam',
     });
   }
 }
 
 async function sendWelcome(chatId: number, name: string) {
-  const url = webAppUrl();
   await tg('sendMessage', {
     chat_id: chatId,
     text:
-      `Salom, ${name}! 👋\n\n` +
-      `*CaseVerse* — case ochish, upgrade va marketplace Mini App.\n\n` +
-      `Pastdagi tugma orqali o‘yinga kiring.`,
+      `Salom, ${name}!\n\n` +
+      `*CaseVerse* — case ochish, upgrade va marketplace.\n\n` +
+      `Pastdagi tugma orqali kiring.`,
     parse_mode: 'Markdown',
     reply_markup: {
-      inline_keyboard: [
-        [{ text: '🎮 CaseVerse ochish', web_app: { url } }],
-      ],
+      inline_keyboard: [[{ text: 'CaseVerse ochish', web_app: { url: webAppUrl() } }]],
     },
   });
 }
@@ -78,7 +76,7 @@ export async function setupBot() {
   const url = webAppUrl();
   const webhookUrl = `${url}/api/telegram`;
 
-  const webhook = await tg<{ url: string }>('setWebhook', {
+  await tg('setWebhook', {
     url: webhookUrl,
     allowed_updates: ['message'],
     drop_pending_updates: true,
@@ -99,14 +97,6 @@ export async function setupBot() {
     ],
   });
 
-  const me = await tg<{ username: string; first_name: string }>('getMe');
-
-  return {
-    ok: true,
-    bot: me.username,
-    webhook,
-    webhookUrl,
-    webAppUrl: url,
-    menuButton: 'web_app',
-  };
+  const me = await tg<{ username: string }>('getMe');
+  return { ok: true, bot: me.username, webhookUrl, webAppUrl: url };
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import { motion } from 'framer-motion';
 
 type Props = {
@@ -25,23 +27,11 @@ export function UpgradeWheel({ chance, spinning, stopAngle }: Props) {
         <motion.g
           style={{ transformOrigin: '100px 100px' }}
           animate={{ rotate: spinning || stopAngle != null ? rotation : 0 }}
-          transition={{
-            duration: spinning ? 3.6 : 0,
-            ease: [0.12, 0.8, 0.1, 1],
-          }}
+          transition={{ duration: spinning ? 3.6 : 0, ease: [0.12, 0.8, 0.1, 1] }}
         >
           <circle cx="100" cy="100" r="90" fill="#0a1520" stroke="rgba(255,255,255,0.08)" />
-          <path
-            d={describeArc(100, 100, 90, 0, successDeg)}
-            fill="#3ddc97"
-            opacity="0.9"
-            filter="url(#glow)"
-          />
-          <path
-            d={describeArc(100, 100, 90, successDeg, 360)}
-            fill="#ff4d6d"
-            opacity="0.85"
-          />
+          <path d={describeArc(100, 100, 90, 0, successDeg)} fill="#3ddc97" opacity="0.9" filter="url(#glow)" />
+          <path d={describeArc(100, 100, 90, successDeg, 360)} fill="#ff4d6d" opacity="0.85" />
           <circle cx="100" cy="100" r="48" fill="#071018" />
           <text
             x="100"

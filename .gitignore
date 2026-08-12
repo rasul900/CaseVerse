@@ -1,8 +1,11 @@
 node_modules
-dist
+.next
+out
 .env
 .env.local
 *.log
 .DS_Store
-coverage
-.vite
+apps
+packages
+api
+dist

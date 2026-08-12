@@ -1,22 +1,8 @@
-import { nanoid } from 'nanoid';
-import {
-  DEMO_CASES,
-  MARKET_FEE_RATE,
-  allItems,
-  getCaseById,
-  getItemById,
-  upgradeSuccessChance,
-} from '@caseverse/shared';
-import type {
-  InventoryItem,
-  MarketListing,
-  UserState,
-} from '@caseverse/shared';
-import { newServerSeed, rollCaseItem, secureUnit, sha256 } from './crypto.js';
-
-function randomFloat(): number {
-  return Math.round(secureUnit() * 10000) / 10000;
-}
+import { DEMO_CASES, allItems, getCaseById, getItemById } from './catalog';
+import { upgradeSuccessChance } from './rng';
+import type { InventoryItem, MarketListing, UserState } from './types';
+import { MARKET_FEE_RATE } from './types';
+import { newId, newServerSeed, rollCaseItem, secureUnit, sha256 } from './crypto';
 
 function makeUser(id = 'demo-user', username = 'explorer'): UserState {
   const telegramId = id.startsWith('tg:') ? Number(id.slice(3)) : undefined;
@@ -27,26 +13,26 @@ function makeUser(id = 'demo-user', username = 'explorer'): UserState {
     coins: 5000,
     inventory: [],
     pityCounter: 0,
-    clientSeed: nanoid(16),
+    clientSeed: newId(),
   };
 }
 
 const g = globalThis as typeof globalThis & {
-  __caseverseUsers?: Map<string, UserState>;
-  __caseverseListings?: Map<string, MarketListing>;
-  __caseverseNonces?: Map<string, number>;
+  __cvUsers?: Map<string, UserState>;
+  __cvListings?: Map<string, MarketListing>;
+  __cvNonces?: Map<string, number>;
 };
 
-const users = (g.__caseverseUsers ??= new Map<string, UserState>([['demo-user', makeUser()]]));
-const listings = (g.__caseverseListings ??= new Map<string, MarketListing>());
-const nonces = (g.__caseverseNonces ??= new Map<string, number>());
+const users = (g.__cvUsers ??= new Map([['demo-user', makeUser()]]));
+const listings = (g.__cvListings ??= new Map());
+const nonces = (g.__cvNonces ??= new Map());
 
 export function getOrCreateUser(userId = 'demo-user', username?: string): UserState {
   let user = users.get(userId);
   if (!user) {
     user = makeUser(userId, username ?? (userId.startsWith('tg:') ? `user_${userId.slice(3)}` : 'explorer'));
     users.set(userId, user);
-  } else if (username && user.username !== username) {
+  } else if (username) {
     user.username = username;
   }
   return user;
@@ -71,33 +57,21 @@ export function openCase(userId: string, caseId: string) {
   if (user.coins < caseDef.price) throw new Error('Insufficient coins');
 
   const serverSeed = newServerSeed();
-  const serverSeedHash = sha256(serverSeed);
   const nonce = (nonces.get(userId) ?? 0) + 1;
   nonces.set(userId, nonce);
-
-  const { item, roll } = rollCaseItem(
-    caseDef,
-    user.pityCounter,
-    serverSeed,
-    user.clientSeed,
-    nonce,
-  );
+  const { item, roll } = rollCaseItem(caseDef, user.pityCounter, serverSeed, user.clientSeed, nonce);
 
   user.coins -= caseDef.price;
-
-  const isHigh =
-    item.rarity === 'epic' ||
-    item.rarity === 'legendary' ||
-    item.rarity === 'mythic';
+  const isHigh = ['epic', 'legendary', 'mythic'].includes(item.rarity);
   user.pityCounter = isHigh ? 0 : user.pityCounter + 1;
 
   const instance: InventoryItem = {
-    instanceId: nanoid(),
+    instanceId: newId(),
     itemId: item.id,
     name: item.name,
     rarity: item.rarity,
     basePrice: item.basePrice,
-    float: randomFloat(),
+    float: Math.round(secureUnit() * 10000) / 10000,
     acquiredAt: new Date().toISOString(),
     source: 'case',
   };
@@ -107,7 +81,7 @@ export function openCase(userId: string, caseId: string) {
     success: true as const,
     instance,
     item,
-    serverSeedHash,
+    serverSeedHash: sha256(serverSeed),
     serverSeed,
     clientSeed: user.clientSeed,
     nonce,
@@ -117,11 +91,7 @@ export function openCase(userId: string, caseId: string) {
   };
 }
 
-export function quoteUpgrade(
-  userId: string,
-  instanceIds: string[],
-  targetItemId: string,
-) {
+export function quoteUpgrade(userId: string, instanceIds: string[], targetItemId: string) {
   const user = getOrCreateUser(userId);
   const instances = instanceIds.map((id) => {
     const found = user.inventory.find((i) => i.instanceId === id);
@@ -130,12 +100,9 @@ export function quoteUpgrade(
   });
   const target = getItemById(targetItemId);
   if (!target) throw new Error('Target item not found');
-
   const inputValue = instances.reduce((s, i) => s + i.basePrice, 0);
-  const chance = upgradeSuccessChance(inputValue, target.basePrice);
-
   return {
-    successChance: chance,
+    successChance: upgradeSuccessChance(inputValue, target.basePrice),
     inputValue,
     targetValue: target.basePrice,
     multiplier: target.basePrice / Math.max(1, inputValue),
@@ -145,41 +112,33 @@ export function quoteUpgrade(
   };
 }
 
-export function performUpgrade(
-  userId: string,
-  instanceIds: string[],
-  targetItemId: string,
-) {
+export function performUpgrade(userId: string, instanceIds: string[], targetItemId: string) {
   const quote = quoteUpgrade(userId, instanceIds, targetItemId);
   const user = getOrCreateUser(userId);
   const roll = secureUnit();
   const success = roll < quote.successChance;
-  const stopAngle = roll * 360;
-
   for (const id of instanceIds) {
     user.inventory = user.inventory.filter((i) => i.instanceId !== id);
   }
-
   let wonItem: InventoryItem | undefined;
   if (success) {
     wonItem = {
-      instanceId: nanoid(),
+      instanceId: newId(),
       itemId: quote.target.id,
       name: quote.target.name,
       rarity: quote.target.rarity,
       basePrice: quote.target.basePrice,
-      float: randomFloat(),
+      float: Math.round(secureUnit() * 10000) / 10000,
       acquiredAt: new Date().toISOString(),
       source: 'upgrade',
     };
     user.inventory.unshift(wonItem);
   }
-
   return {
     success,
     successChance: quote.successChance,
     roll,
-    stopAngle,
+    stopAngle: roll * 360,
     wonItem,
     lostInstanceIds: instanceIds,
     coinsLeft: user.coins,
@@ -191,10 +150,9 @@ export function createListing(userId: string, instanceId: string, price: number)
   const idx = user.inventory.findIndex((i) => i.instanceId === instanceId);
   if (idx < 0) throw new Error('Item not in inventory');
   if (price <= 0) throw new Error('Invalid price');
-
   const [instance] = user.inventory.splice(idx, 1);
   const listing: MarketListing = {
-    id: nanoid(),
+    id: newId(),
     sellerId: userId,
     instance: instance!,
     price,
@@ -215,10 +173,7 @@ export function listMarket(filters?: {
   if (filters?.minPrice != null) rows = rows.filter((l) => l.price >= filters.minPrice!);
   if (filters?.maxPrice != null) rows = rows.filter((l) => l.price <= filters.maxPrice!);
   if (filters?.caseId) {
-    rows = rows.filter((l) => {
-      const def = getItemById(l.instance.itemId);
-      return def?.caseId === filters.caseId;
-    });
+    rows = rows.filter((l) => getItemById(l.instance.itemId)?.caseId === filters.caseId);
   }
   return rows.sort((a, b) => a.price - b.price);
 }
@@ -231,33 +186,23 @@ export function buyListing(buyerId: string, listingId: string) {
   if (buyer.coins < listing.price) throw new Error('Insufficient coins');
 
   const fee = Math.floor(listing.price * MARKET_FEE_RATE);
-  const sellerNet = listing.price - fee;
   const seller = getOrCreateUser(listing.sellerId);
-
   buyer.coins -= listing.price;
-  seller.coins += sellerNet;
+  seller.coins += listing.price - fee;
 
   const bought: InventoryItem = {
     ...listing.instance,
-    instanceId: nanoid(),
+    instanceId: newId(),
     acquiredAt: new Date().toISOString(),
     source: 'market',
   };
   buyer.inventory.unshift(bought);
   listings.delete(listingId);
-
-  return {
-    item: bought,
-    paid: listing.price,
-    fee,
-    coinsLeft: buyer.coins,
-  };
+  return { item: bought, paid: listing.price, fee, coinsLeft: buyer.coins };
 }
 
 export function catalogTargets() {
-  return allItems().filter(
-    (i) => i.rarity === 'rare' || i.rarity === 'epic' || i.rarity === 'legendary' || i.rarity === 'mythic',
+  return allItems().filter((i) =>
+    ['rare', 'epic', 'legendary', 'mythic'].includes(i.rarity),
   );
 }
-
-export { MARKET_FEE_RATE };

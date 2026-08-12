@@ -3,16 +3,14 @@ import type {
   ItemDef,
   MarketListing,
   OpenCaseResult,
-  UpgradeQuote,
   UpgradeResult,
   UserState,
-} from '@caseverse/shared';
+} from '@/lib/types';
 
 function telegramInitData(): string {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tg = (window as any).Telegram?.WebApp;
-    return tg?.initData ?? '';
+    return (window as any).Telegram?.WebApp?.initData ?? '';
   } catch {
     return '';
   }
@@ -50,13 +48,10 @@ export const client = {
     api<OpenCaseResult>(`/api/cases/${caseId}/open`, { method: 'POST' }),
   upgradeTargets: () => api<ItemDef[]>('/api/upgrade/targets'),
   quoteUpgrade: (instanceIds: string[], targetItemId: string) =>
-    api<UpgradeQuote & { target: ItemDef; instances: InventoryItem[] }>(
-      '/api/upgrade/quote',
-      {
-        method: 'POST',
-        body: JSON.stringify({ instanceIds, targetItemId }),
-      },
-    ),
+    api<{ successChance: number }>('/api/upgrade/quote', {
+      method: 'POST',
+      body: JSON.stringify({ instanceIds, targetItemId }),
+    }),
   upgrade: (instanceIds: string[], targetItemId: string) =>
     api<UpgradeResult>('/api/upgrade', {
       method: 'POST',
@@ -69,8 +64,5 @@ export const client = {
       body: JSON.stringify({ instanceId, price }),
     }),
   buy: (listingId: string) =>
-    api<{ item: InventoryItem; paid: number; fee: number; coinsLeft: number }>(
-      `/api/market/${listingId}/buy`,
-      { method: 'POST' },
-    ),
+    api<{ item: InventoryItem }>(`/api/market/${listingId}/buy`, { method: 'POST' }),
 };

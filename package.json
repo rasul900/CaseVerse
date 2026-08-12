@@ -1,36 +1,25 @@
 {
   "name": "caseverse",
-  "private": true,
   "version": "0.1.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "private": true,
   "scripts": {
-    "dev:web": "vite",
-    "dev:api": "npm run dev --workspace=@caseverse/api",
-    "build": "npm run build:web",
-    "build:web": "npm run build --workspace=@caseverse/web",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
     "bot:setup": "node scripts/setup-bot.mjs"
   },
   "dependencies": {
-    "@caseverse/shared": "*",
     "@twa-dev/sdk": "^8.0.2",
-    "@vitejs/plugin-react": "^4.3.4",
-    "cors": "^2.8.5",
-    "express": "^4.21.2",
     "framer-motion": "^12.5.0",
-    "nanoid": "^5.1.5",
+    "next": "^15.2.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "vite": "^6.2.2"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
-    "@vercel/node": "^5.2.1",
     "typescript": "^5.8.2"
   },
   "engines": {

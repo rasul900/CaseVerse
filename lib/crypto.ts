@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { pickFromPool } from '@caseverse/shared';
-import type { CaseDef, ItemDef } from '@caseverse/shared';
+import type { CaseDef, ItemDef } from './types';
+import { pickFromPool } from './rng';
 
 export function sha256(input: string): string {
   return createHash('sha256').update(input).digest('hex');
@@ -12,19 +12,16 @@ export function newServerSeed(): string {
 
 export function secureUnit(): number {
   const buf = randomBytes(6);
-  const int = buf.readUIntBE(0, 6);
-  return int / 0x1000000000000;
+  return buf.readUIntBE(0, 6) / 0x1000000000000;
 }
 
-export function provablyFairRoll(
-  serverSeed: string,
-  clientSeed: string,
-  nonce: number,
-): number {
+export function newId(): string {
+  return randomBytes(12).toString('hex');
+}
+
+export function provablyFairRoll(serverSeed: string, clientSeed: string, nonce: number): number {
   const hex = sha256(`${serverSeed}:${clientSeed}:${nonce}`);
-  const slice = hex.slice(0, 13);
-  const int = parseInt(slice, 16);
-  return int / 0x1fffffffffffff;
+  return parseInt(hex.slice(0, 13), 16) / 0x1fffffffffffff;
 }
 
 export function rollCaseItem(
@@ -35,6 +32,5 @@ export function rollCaseItem(
   nonce: number,
 ): { item: ItemDef; roll: number } {
   const roll = provablyFairRoll(serverSeed, clientSeed, nonce);
-  const item = pickFromPool(caseDef, roll, pityCounter);
-  return { item, roll };
+  return { item: pickFromPool(caseDef, roll, pityCounter), roll };
 }
