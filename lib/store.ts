@@ -1,8 +1,12 @@
 import { DEMO_CASES, allItems, getCaseById, getItemById } from './catalog';
 import { upgradeSuccessChance } from './rng';
-import type { InventoryItem, MarketListing, UserState } from './types';
+import type { InventoryItem, ItemDef, ItemKind, MarketListing, Rarity, UserState } from './types';
 import { MARKET_FEE_RATE } from './types';
 import { newId, newServerSeed, rollCaseItem, secureUnit, sha256 } from './crypto';
+
+/** Bot seller so Market is always stocked with buyable catalog skins. */
+export const SHOP_SELLER_ID = 'cv-shop';
+const SHOP_STOCK_TARGET = 34;
 
 function makeUser(id = 'demo-user', username = 'explorer'): UserState {
   const telegramId = id.startsWith('tg:') ? Number(id.slice(3)) : undefined;
@@ -23,9 +27,118 @@ const g = globalThis as typeof globalThis & {
   __cvNonces?: Map<string, number>;
 };
 
-const users = (g.__cvUsers ??= new Map([['demo-user', makeUser()]]));
+const users = (g.__cvUsers ??= new Map([
+  ['demo-user', makeUser()],
+  [SHOP_SELLER_ID, makeUser(SHOP_SELLER_ID, 'CaseVerse Shop')],
+]));
 const listings = (g.__cvListings ??= new Map());
 const nonces = (g.__cvNonces ??= new Map());
+
+function shopPrice(basePrice: number, itemId: string): number {
+  const n = itemId.split('').reduce((s, ch) => s + ch.charCodeAt(0), 0);
+  const markup = 1.05 + (n % 8) / 100;
+  return Math.max(0.01, Math.round(basePrice * markup * 100) / 100);
+}
+
+function listingFromCatalogItem(item: ItemDef): MarketListing {
+  const instance: InventoryItem = {
+    instanceId: newId(),
+    itemId: item.id,
+    name: item.name,
+    rarity: item.rarity,
+    basePrice: item.basePrice,
+    image: item.image,
+    float: Math.round(secureUnit() * 10000) / 10000,
+    acquiredAt: new Date().toISOString(),
+    source: 'market',
+  };
+  return {
+    id: newId(),
+    sellerId: SHOP_SELLER_ID,
+    instance,
+    price: shopPrice(item.basePrice, item.id),
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function shopListingCount() {
+  let n = 0;
+  for (const l of listings.values()) {
+    if (l.sellerId === SHOP_SELLER_ID) n++;
+  }
+  return n;
+}
+
+/** Curated mix: ~5 per rarity plus knives, gloves, and stickers. */
+function shopPool(): ItemDef[] {
+  const items = allItems();
+  const picked = new Map<string, ItemDef>();
+  const add = (item?: ItemDef) => {
+    if (item) picked.set(item.id, item);
+  };
+
+  const rarities: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+  for (const r of rarities) {
+    const group = items.filter((i) => i.rarity === r);
+    const seenCases = new Set<string>();
+    const ordered: ItemDef[] = [];
+    for (const item of group) {
+      const caseKey = item.caseId ?? '';
+      if (!seenCases.has(caseKey)) {
+        ordered.push(item);
+        seenCases.add(caseKey);
+      }
+    }
+    for (const item of group) {
+      if (!ordered.includes(item)) ordered.push(item);
+    }
+    for (const item of ordered.slice(0, 5)) add(item);
+  }
+
+  const extras: Array<[ItemKind, number]> = [
+    ['knife', 4],
+    ['glove', 3],
+    ['sticker', 5],
+  ];
+  for (const [kind, cap] of extras) {
+    for (const item of items.filter((i) => i.kind === kind).slice(0, cap)) add(item);
+  }
+
+  for (const item of items) {
+    if (picked.size >= SHOP_STOCK_TARGET) break;
+    add(item);
+  }
+  return [...picked.values()];
+}
+
+/** Keep a pool of shop listings so Market never stays empty. */
+export function ensureShopStock() {
+  if (!users.has(SHOP_SELLER_ID)) {
+    users.set(SHOP_SELLER_ID, makeUser(SHOP_SELLER_ID, 'CaseVerse Shop'));
+  }
+  const pool = shopPool();
+  if (!pool.length) return;
+
+  let missing = SHOP_STOCK_TARGET - shopListingCount();
+  if (missing <= 0) return;
+
+  const listed = new Set<string>();
+  for (const l of listings.values()) {
+    if (l.sellerId === SHOP_SELLER_ID) listed.add(l.instance.itemId);
+  }
+
+  const queue = [...pool.filter((i) => !listed.has(i.id)), ...pool.filter((i) => listed.has(i.id))];
+  let i = 0;
+  while (missing > 0) {
+    const item = queue[i % queue.length]!;
+    const listing = listingFromCatalogItem(item);
+    listings.set(listing.id, listing);
+    missing--;
+    i++;
+  }
+}
+
+ensureShopStock();
 
 export function getOrCreateUser(userId = 'demo-user', username?: string): UserState {
   let user = users.get(userId);
@@ -171,6 +284,7 @@ export function listMarket(filters?: {
   maxPrice?: number;
   caseId?: string;
 }) {
+  ensureShopStock();
   let rows = [...listings.values()];
   if (filters?.rarity) rows = rows.filter((l) => l.instance.rarity === filters.rarity);
   if (filters?.minPrice != null) rows = rows.filter((l) => l.price >= filters.minPrice!);
@@ -201,6 +315,7 @@ export function buyListing(buyerId: string, listingId: string) {
   };
   buyer.inventory.unshift(bought);
   listings.delete(listingId);
+  if (listing.sellerId === SHOP_SELLER_ID) ensureShopStock();
   return { item: bought, paid: listing.price, fee, coinsLeft: buyer.coins };
 }
 
