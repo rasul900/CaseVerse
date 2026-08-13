@@ -14,6 +14,7 @@ export function UpgradeWheel({ chance, spinning, stopAngle }: Props) {
 
   return (
     <div className="wheel-stage">
+      <div className="wheel-ring" aria-hidden />
       <svg className="wheel" viewBox="0 0 200 200">
         <defs>
           <filter id="glow">
@@ -23,29 +24,36 @@ export function UpgradeWheel({ chance, spinning, stopAngle }: Props) {
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <linearGradient id="metalRim" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#3a3a48" />
+            <stop offset="50%" stopColor="#1a1a22" />
+            <stop offset="100%" stopColor="#4a4a58" />
+          </linearGradient>
         </defs>
+        <circle cx="100" cy="100" r="96" fill="none" stroke="url(#metalRim)" strokeWidth="4" />
         <motion.g
           style={{ transformOrigin: '100px 100px' }}
           animate={{ rotate: spinning || stopAngle != null ? rotation : 0 }}
           transition={{ duration: spinning ? 3.6 : 0, ease: [0.12, 0.8, 0.1, 1] }}
         >
-          <circle cx="100" cy="100" r="90" fill="#0a1520" stroke="rgba(255,255,255,0.08)" />
-          <path d={describeArc(100, 100, 90, 0, successDeg)} fill="#3ddc97" opacity="0.9" filter="url(#glow)" />
-          <path d={describeArc(100, 100, 90, successDeg, 360)} fill="#ff4d6d" opacity="0.85" />
-          <circle cx="100" cy="100" r="48" fill="#071018" />
+          <circle cx="100" cy="100" r="90" fill="#0a0a0e" stroke="rgba(255,255,255,0.1)" strokeWidth="2" />
+          <path d={describeArc(100, 100, 90, 0, successDeg)} fill="#3ddc97" opacity="0.95" filter="url(#glow)" />
+          <path d={describeArc(100, 100, 90, successDeg, 360)} fill="#ff3b5c" opacity="0.9" />
+          <circle cx="100" cy="100" r="46" fill="#101014" stroke="rgba(255,255,255,0.08)" />
+          <circle cx="100" cy="100" r="40" fill="#0a0a0c" />
           <text
             x="100"
-            y="104"
+            y="106"
             textAnchor="middle"
-            fill="#e8f2f8"
-            fontSize="18"
+            fill="#00e8d0"
+            fontSize="20"
             fontFamily="Orbitron, sans-serif"
             fontWeight="700"
           >
             {Math.round(chance * 100)}%
           </text>
         </motion.g>
-        <polygon points="100,8 92,24 108,24" fill="#00e5c8" />
+        <polygon points="100,6 91,24 109,24" fill="#00e8d0" filter="url(#glow)" />
       </svg>
     </div>
   );

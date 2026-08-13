@@ -16,8 +16,9 @@ type Props = {
 function cellStyle(rarity: Rarity) {
   const c = rarityColor(rarity);
   return {
-    background: `linear-gradient(160deg, ${c}33, #0a1520)`,
-    boxShadow: `inset 0 0 0 1px ${c}55`,
+    background: `linear-gradient(165deg, ${c}44 0%, #0a0a0e 55%, #060608 100%)`,
+    boxShadow: `0 0 14px ${c}33, inset 0 0 0 1px ${c}66`,
+    borderColor: c,
     color: c,
   };
 }
@@ -31,16 +32,17 @@ export function CaseOpenModal({ caseName, pool, result, spinning, onClose }: Pro
     return base;
   }, [pool, result]);
 
-  const offset = result ? -(Math.floor(strip.length * 0.72) * 100 - 160) : 0;
-  const isMythic =
-    result?.item.rarity === 'legendary' || result?.item.rarity === 'mythic';
+  const offset = result ? -(Math.floor(strip.length * 0.72) * 106 - 160) : 0;
+  const isMythic = result?.item.rarity === 'legendary' || result?.item.rarity === 'mythic';
 
   return (
     <div className={`overlay ${isMythic && result && !spinning ? 'flash' : ''}`}>
       {isMythic && result && !spinning && <Confetti />}
       <div className="modal">
         <h2>{caseName}</h2>
-        <p className="muted">Server RNG natijasi — animatsiya faqat vizual.</p>
+        <p className="muted" style={{ fontSize: 12, margin: '0 0 4px' }}>
+          Opening…
+        </p>
         <div className="roulette-wrap">
           <div className="roulette-pointer" />
           <motion.div
@@ -58,7 +60,7 @@ export function CaseOpenModal({ caseName, pool, result, spinning, onClose }: Pro
         </div>
         {result && !spinning && (
           <div className="result-banner win" style={{ color: rarityColor(result.item.rarity) }}>
-            {result.item.name} · {result.item.rarity.toUpperCase()} · {result.item.basePrice} coin
+            {result.item.name} · {result.item.rarity.toUpperCase()} · {result.item.basePrice}
           </div>
         )}
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
@@ -79,7 +81,7 @@ function Confetti() {
           key={i}
           style={{
             left: `${(i * 17) % 100}%`,
-            background: i % 2 ? '#00e5c8' : '#f5c542',
+            background: i % 2 ? '#00e8d0' : '#f5c542',
             animationDelay: `${(i % 8) * 0.05}s`,
           }}
         />

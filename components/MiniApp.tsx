@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { InventoryItem, ItemDef, MarketListing, OpenCaseResult, UserState } from '@/lib/types';
 import { client, type CaseCard } from '@/lib/client-api';
 import { formatCoins, rarityColor, rarityLabel } from '@/lib/format';
@@ -8,6 +8,52 @@ import { CaseOpenModal } from '@/components/CaseOpenModal';
 import { UpgradeWheel } from '@/components/UpgradeWheel';
 
 type Tab = 'cases' | 'upgrade' | 'inventory' | 'market';
+
+const NAV: { id: Tab; label: string; icon: ReactNode }[] = [
+  {
+    id: 'cases',
+    label: 'Cases',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <rect x="3" y="8" width="18" height="12" rx="2" />
+        <path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        <path d="M12 12v4" />
+      </svg>
+    ),
+  },
+  {
+    id: 'upgrade',
+    label: 'Upgrade',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </svg>
+    ),
+  },
+  {
+    id: 'inventory',
+    label: 'Inventory',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M4 7h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" />
+        <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+        <path d="M4 11h16" />
+      </svg>
+    ),
+  },
+  {
+    id: 'market',
+    label: 'Market',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M3 9l2-5h14l2 5" />
+        <path d="M3 9v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9" />
+        <path d="M9 14h6" />
+      </svg>
+    ),
+  },
+];
 
 export default function MiniApp() {
   const [tab, setTab] = useState<Tab>('cases');
@@ -41,7 +87,7 @@ export default function MiniApp() {
         const WebApp = mod.default;
         WebApp.ready();
         WebApp.expand();
-        WebApp.setHeaderColor('#071018');
+        WebApp.setHeaderColor('#0a0a0c');
       } catch {
         /* browser preview */
       }
@@ -153,58 +199,60 @@ export default function MiniApp() {
   return (
     <div className="app">
       <div className="brand-bar">
-        <div className="brand">CASEVERSE</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {user?.username && (
-            <span className="muted" style={{ fontSize: 13 }}>
-              @{user.username}
-            </span>
-          )}
+        <div className="brand">
+          CASE<span>VERSE</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {user?.username && <span className="user-chip">@{user.username}</span>}
           <div className="coins">{formatCoins(user?.coins ?? 0)}</div>
         </div>
       </div>
 
       {tab === 'cases' && (
-        <>
-          <header className="hero">
-            <h1>CASEVERSE</h1>
-            <p>Och, upgrade qil, bozorda sot — server RNG bilan.</p>
-          </header>
+        <div className="tab-enter" key="cases">
           <p className="section-title">Cases</p>
           <div className="case-grid">
             {cases.map((c) => (
               <button
                 key={c.id}
+                type="button"
                 className={`case-tile ${c.limited ? 'limited' : ''}`}
                 onClick={() => handleOpen(c)}
               >
-                <h3>{c.name}</h3>
-                <p>{c.description}</p>
-                <div className="case-meta">
-                  <span className="price">{c.price} coin</span>
-                  {c.limited ? (
-                    <span className="badge">Limited</span>
-                  ) : (
-                    <span className="muted">{c.itemCount} items</span>
-                  )}
+                <div className="case-art">
+                  <div className="case-icon" />
+                </div>
+                <div className="case-body">
+                  <h3>{c.name}</h3>
+                  <div className="case-meta">
+                    <span className="price-chip">{c.price}</span>
+                    {c.limited ? (
+                      <span className="badge">Limited</span>
+                    ) : (
+                      <span className="case-count">{c.itemCount}</span>
+                    )}
+                  </div>
+                  <span className="case-open-cta">Open</span>
                 </div>
               </button>
             ))}
           </div>
-        </>
+        </div>
       )}
 
       {tab === 'upgrade' && (
-        <>
+        <div className="tab-enter" key="upgrade">
           <p className="section-title">Upgrade</p>
-          <p className="muted">Itemlarni tanlang → maqsad → g‘ildirak.</p>
-          <UpgradeWheel chance={chance} spinning={upSpinning} stopAngle={stopAngle} />
-          {upOutcome && (
-            <div className={`result-banner ${upOutcome}`}>
-              {upOutcome === 'win' ? 'Upgrade muvaffaqiyatli!' : 'Item yo‘qoldi...'}
-            </div>
-          )}
-          <label className="muted">Maqsad item</label>
+          <div className="upgrade-panel">
+            <p className="upgrade-hint">Tanlang → maqsad → g‘ildirak</p>
+            <UpgradeWheel chance={chance} spinning={upSpinning} stopAngle={stopAngle} />
+            {upOutcome && (
+              <div className={`result-banner ${upOutcome}`}>
+                {upOutcome === 'win' ? 'Upgrade muvaffaqiyatli!' : 'Item yo‘qoldi...'}
+              </div>
+            )}
+          </div>
+          <label className="field-label">Maqsad item</label>
           <select
             value={targetId}
             onChange={(e) => {
@@ -212,7 +260,7 @@ export default function MiniApp() {
               setStopAngle(null);
               setUpOutcome(null);
             }}
-            style={{ width: '100%', marginBottom: 12 }}
+            style={{ marginBottom: 12 }}
           >
             <option value="">Tanlang...</option>
             {targets.map((t) => (
@@ -221,73 +269,70 @@ export default function MiniApp() {
               </option>
             ))}
           </select>
-          <div className="panel">
-            {(user?.inventory ?? []).map((item) => (
-              <label key={item.instanceId} className="item-row" style={{ cursor: 'pointer' }}>
-                <div
-                  className="swatch"
-                  style={{ background: `${rarityColor(item.rarity)}22`, color: rarityColor(item.rarity) }}
+          <p className="section-title">Inventory</p>
+          <div className="item-grid">
+            {(user?.inventory ?? []).map((item) => {
+              const on = selected.includes(item.instanceId);
+              const c = rarityColor(item.rarity);
+              return (
+                <button
+                  key={item.instanceId}
+                  type="button"
+                  className={`item-cell ${on ? 'selected' : ''}`}
+                  onClick={() => toggleSelect(item.instanceId)}
+                  style={{ borderColor: `${c}55` }}
                 >
-                  {item.rarity.slice(0, 1).toUpperCase()}
-                </div>
-                <div>
-                  <h4>{item.name}</h4>
-                  <div className="sub">
-                    {rarityLabel(item.rarity)} · {item.basePrice}
+                  <span className="check-mark">{on ? '✓' : ''}</span>
+                  <div className="swatch" style={{ background: `${c}22`, color: c, borderColor: c }}>
+                    {item.rarity.slice(0, 1).toUpperCase()}
                   </div>
-                </div>
-                <input
-                  className="checkbox"
-                  type="checkbox"
-                  checked={selected.includes(item.instanceId)}
-                  onChange={() => toggleSelect(item.instanceId)}
-                />
-              </label>
-            ))}
+                  <h4>{item.name}</h4>
+                  <div className="sub">{item.basePrice}</div>
+                </button>
+              );
+            })}
             {!user?.inventory.length && <div className="empty">Avval case oching</div>}
           </div>
           <button
             className="btn"
-            style={{ width: '100%', marginTop: 12 }}
+            style={{ width: '100%', marginTop: 14 }}
             disabled={!selected.length || !targetId || upSpinning}
             onClick={handleUpgrade}
           >
-            Upgrade ({Math.round(chance * 100)}%)
+            Upgrade {Math.round(chance * 100)}%
           </button>
-        </>
+        </div>
       )}
 
       {tab === 'inventory' && (
-        <>
+        <div className="tab-enter" key="inventory">
           <p className="section-title">Inventory</p>
-          <div className="panel">
-            {(user?.inventory ?? []).map((item) => (
-              <div key={item.instanceId} className="item-row">
-                <div
-                  className="swatch"
-                  style={{ background: `${rarityColor(item.rarity)}22`, color: rarityColor(item.rarity) }}
-                >
-                  {item.rarity.slice(0, 1).toUpperCase()}
-                </div>
-                <div>
+          <div className="item-grid">
+            {(user?.inventory ?? []).map((item) => {
+              const c = rarityColor(item.rarity);
+              return (
+                <div key={item.instanceId} className="item-cell" style={{ borderColor: `${c}66` }}>
+                  <div className="swatch" style={{ background: `${c}22`, color: c, borderColor: c }}>
+                    {item.rarity.slice(0, 1).toUpperCase()}
+                  </div>
                   <h4>{item.name}</h4>
-                  <div className="sub">
-                    {rarityLabel(item.rarity)} · {item.basePrice} coin
+                  <div className="sub">{item.basePrice}</div>
+                  <div className="cell-actions">
+                    <button className="btn ghost" type="button" onClick={() => sellItem(item)}>
+                      Sotish
+                    </button>
                   </div>
                 </div>
-                <button className="btn ghost" onClick={() => sellItem(item)}>
-                  Sotish
-                </button>
-              </div>
-            ))}
+              );
+            })}
             {!user?.inventory.length && <div className="empty">Inventar bo‘sh</div>}
           </div>
-        </>
+        </div>
       )}
 
       {tab === 'market' && (
-        <>
-          <p className="section-title">Marketplace</p>
+        <div className="tab-enter" key="market">
+          <p className="section-title">Market</p>
           <div className="filters">
             <select value={rarityFilter} onChange={(e) => setRarityFilter(e.target.value)}>
               <option value="">Barcha rarity</option>
@@ -299,30 +344,27 @@ export default function MiniApp() {
               <option value="mythic">Mythic</option>
             </select>
           </div>
-          <div className="panel">
-            {market.map((l) => (
-              <div key={l.id} className="item-row">
-                <div
-                  className="swatch"
-                  style={{
-                    background: `${rarityColor(l.instance.rarity)}22`,
-                    color: rarityColor(l.instance.rarity),
-                  }}
-                >
-                  {l.instance.rarity.slice(0, 1).toUpperCase()}
-                </div>
-                <div>
+          <div className="item-grid">
+            {market.map((l) => {
+              const c = rarityColor(l.instance.rarity);
+              return (
+                <div key={l.id} className="item-cell" style={{ borderColor: `${c}66` }}>
+                  <div className="swatch" style={{ background: `${c}22`, color: c, borderColor: c }}>
+                    {l.instance.rarity.slice(0, 1).toUpperCase()}
+                  </div>
                   <h4>{l.instance.name}</h4>
-                  <div className="sub">{l.price} coin · fee 5%</div>
+                  <div className="sub">{l.price}</div>
+                  <div className="cell-actions">
+                    <button className="btn" type="button" onClick={() => buyListing(l.id)}>
+                      Buy
+                    </button>
+                  </div>
                 </div>
-                <button className="btn" onClick={() => buyListing(l.id)}>
-                  Sotib ol
-                </button>
-              </div>
-            ))}
+              );
+            })}
             {!market.length && <div className="empty">Listing yo‘q</div>}
           </div>
-        </>
+        </div>
       )}
 
       {error && (
@@ -346,15 +388,9 @@ export default function MiniApp() {
       )}
 
       <nav className="nav">
-        {(
-          [
-            ['cases', 'Cases'],
-            ['upgrade', 'Upgrade'],
-            ['inventory', 'Inventar'],
-            ['market', 'Market'],
-          ] as const
-        ).map(([id, label]) => (
-          <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}>
+        {NAV.map(({ id, label, icon }) => (
+          <button key={id} type="button" className={tab === id ? 'active' : ''} onClick={() => setTab(id)}>
+            {icon}
             {label}
           </button>
         ))}
