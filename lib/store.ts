@@ -55,7 +55,7 @@ export function openCase(userId: string, caseId: string) {
   const user = getOrCreateUser(userId);
   const caseDef = getCaseById(caseId);
   if (!caseDef) throw new Error('Case not found');
-  if (user.coins < caseDef.price) throw new Error('Insufficient coins');
+  if (user.coins < caseDef.price) throw new Error('Yetarli balans yo‘q');
 
   const serverSeed = newServerSeed();
   const nonce = (nonces.get(userId) ?? 0) + 1;

@@ -19,6 +19,8 @@ const RANK: Record<string, number> = {
   mythic: 6,
 };
 
+const INSUFFICIENT_BALANCE = 'Yetarli balans yo‘q';
+
 const CASE_SECTIONS = [
   { id: 'budget', title: 'Byudjet', match: (c: CaseCard) => !c.limited && c.price < 1 },
   { id: 'premium', title: 'Premium', match: (c: CaseCard) => !c.limited && c.price >= 1 },
@@ -105,6 +107,7 @@ export default function MiniApp() {
 
   const selectedItem = user?.inventory.find((i) => selected.includes(i.instanceId));
   const targetItem = targets.find((t) => t.id === targetId);
+  const coins = user?.coins ?? 0;
 
   async function refresh() {
     const cs = await client.cases();
@@ -165,7 +168,18 @@ export default function MiniApp() {
       .catch(() => setChance(0));
   }, [selected, targetId]);
 
+  useEffect(() => {
+    if (!error) return;
+    const t = window.setTimeout(() => setError(null), 2800);
+    return () => window.clearTimeout(t);
+  }, [error]);
+
   async function handleOpen(c: CaseCard) {
+    if (spinning) return;
+    if (coins < c.price) {
+      setError(INSUFFICIENT_BALANCE);
+      return;
+    }
     unlockSfx();
     setError(null);
     setOpening(c);
@@ -174,6 +188,7 @@ export default function MiniApp() {
     try {
       const result = await client.openCase(c.id);
       setOpenResult(result);
+      setUser((prev) => (prev ? { ...prev, coins: result.coinsLeft } : prev));
       setTimeout(async () => {
         setSpinning(false);
         await refresh();
@@ -181,7 +196,8 @@ export default function MiniApp() {
     } catch (e) {
       setSpinning(false);
       setOpening(null);
-      setError((e as Error).message);
+      const msg = (e as Error).message;
+      setError(msg.includes('Insufficient') ? INSUFFICIENT_BALANCE : msg);
     }
   }
 
@@ -245,7 +261,7 @@ export default function MiniApp() {
           </div>
           <div className="brand-right">
             {user?.username && <span className="user-chip">@{user.username}</span>}
-            <div className="coins">{formatCoins(user?.coins ?? 0)}</div>
+            <div className="coins">{formatCoins(coins)}</div>
           </div>
         </div>
         <nav className="menu-pills" aria-label="Asosiy menyu">
@@ -270,14 +286,24 @@ export default function MiniApp() {
                   {list.map((c) => {
                     const heroes = featuredItems(c);
                     const glow = rarityColor(heroes[0]?.rarity ?? 'rare');
+                    const locked = coins < c.price;
                     return (
                       <button
                         key={c.id}
                         type="button"
-                        className="case-card"
+                        className={`case-card${locked ? ' locked' : ''}`}
                         style={{ ['--glow' as string]: glow }}
+                        aria-disabled={locked}
                         onClick={() => handleOpen(c)}
                       >
+                        {locked && (
+                          <span className="case-lock" aria-hidden>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <rect x="5" y="11" width="14" height="10" rx="2" />
+                              <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                            </svg>
+                          </span>
+                        )}
                         <div className="case-stage">
                           <span className="holo-beam" />
                           <span className="holo-spark s1" />
@@ -460,7 +486,7 @@ export default function MiniApp() {
       )}
 
       {error && (
-        <div className="result-banner lose" style={{ marginTop: 16 }}>
+        <div className="result-banner lose toast-error" role="status">
           {error}
         </div>
       )}

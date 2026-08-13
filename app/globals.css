@@ -254,6 +254,48 @@ button {
   border-color: var(--glow);
 }
 
+.case-card.locked {
+  opacity: 0.45;
+  filter: grayscale(0.55);
+}
+
+.case-card.locked:active {
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.case-card.locked .gem-price {
+  color: #ff5c7a;
+}
+
+.case-lock {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(8, 10, 14, 0.72);
+  color: #c8ccd6;
+}
+
+.case-lock svg {
+  width: 14px;
+  height: 14px;
+}
+
+.toast-error {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 24px;
+  z-index: 40;
+  margin: 0;
+}
+
 .case-stage {
   position: relative;
   height: 156px;
