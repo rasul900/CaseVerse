@@ -19,9 +19,10 @@ export function newId(): string {
   return randomBytes(12).toString('hex');
 }
 
+/** 13 hex chars = 52 bits. Divide by 2^52 so the roll is uniform in [0, 1). */
 export function provablyFairRoll(serverSeed: string, clientSeed: string, nonce: number): number {
   const hex = sha256(`${serverSeed}:${clientSeed}:${nonce}`);
-  return parseInt(hex.slice(0, 13), 16) / 0x1fffffffffffff;
+  return parseInt(hex.slice(0, 13), 16) / 0x10000000000000;
 }
 
 export function rollCaseItem(
