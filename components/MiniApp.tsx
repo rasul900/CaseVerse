@@ -73,6 +73,9 @@ export default function MiniApp() {
   const [market, setMarket] = useState<MarketListing[]>([]);
   const [rarityFilter, setRarityFilter] = useState('');
 
+  const selectedItem = user?.inventory.find((i) => selected.includes(i.instanceId));
+  const targetItem = targets.find((t) => t.id === targetId);
+
   async function refresh() {
     const cs = await client.cases();
     setCases(cs);
@@ -93,7 +96,7 @@ export default function MiniApp() {
         const WebApp = mod.default;
         WebApp.ready();
         WebApp.expand();
-        WebApp.setHeaderColor('#070a08');
+        WebApp.setHeaderColor('#0b0d12');
       } catch {
         /* browser preview */
       }
@@ -249,16 +252,37 @@ export default function MiniApp() {
       {tab === 'upgrade' && (
         <div className="tab-enter" key="upgrade">
           <p className="section-title">Upgrade</p>
-          <div className="upgrade-panel">
-            <p className="upgrade-hint">Tanlang → maqsad → g‘ildirak</p>
+          <div className="upgrade-duel">
+            <div className="upgrade-slot">
+              {selectedItem ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={selectedItem.image} alt="" />
+                  <span>{formatCoins(selectedItem.basePrice)}</span>
+                </>
+              ) : (
+                <span className="muted">Your skin</span>
+              )}
+            </div>
             <UpgradeWheel chance={chance} spinning={upSpinning} stopAngle={stopAngle} />
-            {upOutcome && (
-              <div className={`result-banner ${upOutcome}`}>
-                {upOutcome === 'win' ? 'Upgrade muvaffaqiyatli!' : 'Item yo‘qoldi...'}
-              </div>
-            )}
+            <div className="upgrade-slot">
+              {targetItem ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={targetItem.image} alt="" />
+                  <span>{formatCoins(targetItem.basePrice)}</span>
+                </>
+              ) : (
+                <span className="muted">Target</span>
+              )}
+            </div>
           </div>
-          <label className="field-label">Maqsad item</label>
+          {upOutcome && (
+            <div className={`result-banner ${upOutcome}`}>
+              {upOutcome === 'win' ? 'Upgrade muvaffaqiyatli!' : 'Item yo‘qoldi...'}
+            </div>
+          )}
+          <label className="field-label">Target</label>
           <select
             value={targetId}
             onChange={(e) => {
@@ -275,7 +299,7 @@ export default function MiniApp() {
               </option>
             ))}
           </select>
-          <p className="section-title">Inventory</p>
+          <p className="section-title">Your skins</p>
           <div className="item-grid">
             {(user?.inventory ?? []).map((item) => {
               const on = selected.includes(item.instanceId);
@@ -304,7 +328,7 @@ export default function MiniApp() {
             disabled={!selected.length || !targetId || upSpinning}
             onClick={handleUpgrade}
           >
-            Upgrade {Math.round(chance * 100)}%
+            UPGRADE {Math.round(chance * 100)}%
           </button>
         </div>
       )}
@@ -379,6 +403,7 @@ export default function MiniApp() {
       {opening && (
         <CaseOpenModal
           caseName={opening.name}
+          caseImage={opening.image}
           pool={opening.items}
           result={openResult}
           spinning={spinning}
