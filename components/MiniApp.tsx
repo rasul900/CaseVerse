@@ -6,6 +6,7 @@ import { client, type CaseCard } from '@/lib/client-api';
 import { formatCoins, rarityColor } from '@/lib/format';
 import { CaseOpenModal } from '@/components/CaseOpenModal';
 import { UpgradeWheel } from '@/components/UpgradeWheel';
+import { unlockSfx } from '@/lib/sfx';
 
 type Tab = 'cases' | 'upgrade' | 'inventory' | 'market';
 
@@ -165,6 +166,7 @@ export default function MiniApp() {
   }, [selected, targetId]);
 
   async function handleOpen(c: CaseCard) {
+    unlockSfx();
     setError(null);
     setOpening(c);
     setOpenResult(null);

@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import type { ItemDef, OpenCaseResult, Rarity } from '@/lib/types';
 import { rarityColor } from '@/lib/format';
 import { formatUsd } from '@/lib/steam';
+import { playCaseCrack, playWin, startSpinTicks } from '@/lib/sfx';
 
 type Props = {
   caseName: string;
@@ -31,6 +32,7 @@ function cellStyle(rarity: Rarity) {
 export function CaseOpenModal({ caseName, caseImage, pool, result, spinning, onClose }: Props) {
   const [mounted, setMounted] = useState(false);
   const [wrapW, setWrapW] = useState(390);
+  const wonRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -39,11 +41,23 @@ export function CaseOpenModal({ caseName, caseImage, pool, result, spinning, onC
     document.body.style.overflow = 'hidden';
     const onResize = () => setWrapW(window.innerWidth);
     window.addEventListener('resize', onResize);
+    playCaseCrack();
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener('resize', onResize);
     };
   }, []);
+
+  useEffect(() => {
+    if (!spinning) return;
+    return startSpinTicks(4800);
+  }, [spinning]);
+
+  useEffect(() => {
+    if (!result || spinning || wonRef.current) return;
+    wonRef.current = true;
+    playWin(result.item.rarity);
+  }, [result, spinning]);
 
   const strip = useMemo(() => {
     const base = [...pool, ...pool, ...pool, ...pool, ...pool, ...pool, ...pool];
