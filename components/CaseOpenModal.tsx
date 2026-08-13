@@ -19,6 +19,26 @@ type Props = {
 
 const CELL = 168;
 const GAP = 12;
+const STRIP_COPIES = 7;
+
+function fisherYates<T>(items: T[]): T[] {
+  const a = items.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]!;
+    a[i] = a[j]!;
+    a[j] = t;
+  }
+  return a;
+}
+
+function buildShuffledStrip(pool: ItemDef[]): ItemDef[] {
+  const strip: ItemDef[] = [];
+  for (let n = 0; n < STRIP_COPIES; n++) {
+    strip.push(...fisherYates(pool));
+  }
+  return strip;
+}
 
 function cellStyle(rarity: Rarity) {
   const c = rarityColor(rarity);
@@ -32,6 +52,7 @@ function cellStyle(rarity: Rarity) {
 export function CaseOpenModal({ caseName, caseImage, pool, result, spinning, onClose }: Props) {
   const [mounted, setMounted] = useState(false);
   const [wrapW, setWrapW] = useState(390);
+  const [shuffled] = useState(() => buildShuffledStrip(pool));
   const wonRef = useRef(false);
 
   useEffect(() => {
@@ -60,12 +81,12 @@ export function CaseOpenModal({ caseName, caseImage, pool, result, spinning, onC
   }, [result, spinning]);
 
   const strip = useMemo(() => {
-    const base = [...pool, ...pool, ...pool, ...pool, ...pool, ...pool, ...pool];
+    const base = shuffled.slice();
     if (!result) return base;
-    const mid = Math.floor(base.length * 0.72);
-    base[mid] = result.item;
+    const land = Math.floor(base.length * 0.72);
+    base[land] = result.item;
     return base;
-  }, [pool, result]);
+  }, [shuffled, result]);
 
   const mid = Math.floor(strip.length * 0.72);
   const offset = result ? -(mid * (CELL + GAP) + 10 - wrapW / 2 + CELL / 2) : 0;
