@@ -207,37 +207,45 @@ export default function MiniApp() {
 
   return (
     <div className="app">
-      <div className="brand-bar">
-        <div className="brand">
-          CASE<span>VERSE</span>
+      <header className="top-chrome">
+        <div className="brand-bar">
+          <div className="brand">
+            CASE<span>VERSE</span>
+          </div>
+          <div className="brand-right">
+            {user?.username && <span className="user-chip">@{user.username}</span>}
+            <div className="coins">{formatCoins(user?.coins ?? 0)}</div>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {user?.username && <span className="user-chip">@{user.username}</span>}
-          <div className="coins">{formatCoins(user?.coins ?? 0)}</div>
-        </div>
-      </div>
+        <nav className="menu-pills" aria-label="Asosiy menyu">
+          {NAV.map(({ id, label, icon }) => (
+            <button key={id} type="button" className={tab === id ? 'active' : ''} onClick={() => setTab(id)}>
+              {icon}
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+      </header>
 
       {tab === 'cases' && (
         <div className="tab-enter" key="cases">
-          <p className="section-title">Cases</p>
-          <div className="case-list">
+          <div className="case-grid">
             {cases.map((c) => (
               <button
                 key={c.id}
                 type="button"
-                className={`case-row ${c.limited ? 'limited' : ''}`}
+                className={`case-card ${c.limited ? 'limited' : ''}`}
                 onClick={() => handleOpen(c)}
               >
+                {c.limited && <span className="badge">Limited</span>}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={c.image || c.items[0]?.image} alt="" className="case-cover" />
-                <div className="case-info">
-                  <h3>{c.name}</h3>
-                  <div className="skin-preview">
-                    {c.items.slice(0, 5).map((it) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={it.id} src={it.image} alt="" />
-                    ))}
-                  </div>
+                <h3>{c.name}</h3>
+                <div className="skin-preview">
+                  {c.items.slice(0, 4).map((it) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={it.id} src={it.image} alt="" />
+                  ))}
                 </div>
                 <div className="case-cta">
                   <span className="price-chip">{formatCoins(c.price)}</span>
@@ -415,14 +423,6 @@ export default function MiniApp() {
         />
       )}
 
-      <nav className="nav">
-        {NAV.map(({ id, label, icon }) => (
-          <button key={id} type="button" className={tab === id ? 'active' : ''} onClick={() => setTab(id)}>
-            {icon}
-            {label}
-          </button>
-        ))}
-      </nav>
     </div>
   );
 }
