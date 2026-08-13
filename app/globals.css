@@ -756,9 +756,9 @@ select {
 
 .upgrade-duel {
   display: grid;
-  grid-template-columns: 1fr 140px 1fr;
+  grid-template-columns: 1fr 168px 1fr;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 12px;
 }
 
@@ -789,13 +789,74 @@ select {
 }
 
 .upgrade-dial {
+  position: relative;
+  width: 168px;
+  height: 168px;
   display: grid;
   place-items: center;
 }
 
 .upgrade-dial .wheel {
-  width: 140px;
-  height: 140px;
+  width: 168px;
+  height: 168px;
+  display: block;
+}
+
+.upgrade-pct {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, 10px);
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+  color: #eef1f6;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.upgrade-needle {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.needle-arm {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  width: 16px;
+  height: 74px;
+  margin-left: -8px;
+  background: linear-gradient(180deg, #ffffff 0%, #e8eef8 42%, #9aa3b5 100%);
+  clip-path: polygon(50% 0, 100% 88%, 50% 100%, 0 88%);
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.55));
+}
+
+.needle-tail {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 26px;
+  margin-left: -5px;
+  background: linear-gradient(180deg, #cfd5e2, #ff5c7a);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  opacity: 0.95;
+}
+
+.needle-hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 32% 28%, #ffffff, #c5cad6 55%, #6b7280);
+  box-shadow: 0 0 0 3px #0b0d12, 0 0 10px rgba(255, 255, 255, 0.4);
 }
 
 .overlay {

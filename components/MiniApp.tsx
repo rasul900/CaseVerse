@@ -194,12 +194,12 @@ export default function MiniApp() {
     try {
       const result = await client.upgrade(selected, targetId);
       setStopAngle(result.stopAngle);
-      setTimeout(async () => {
-        setUpSpinning(false);
-        setUpOutcome(result.success ? 'win' : 'lose');
-        setSelected([]);
-        await refresh();
-      }, 3600);
+        setTimeout(async () => {
+          setUpSpinning(false);
+          setUpOutcome(result.success ? 'win' : 'lose');
+          setSelected([]);
+          await refresh();
+        }, 4100);
     } catch (e) {
       setUpSpinning(false);
       setError((e as Error).message);
