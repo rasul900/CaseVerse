@@ -1,4 +1,5 @@
 import { RARITY_COLORS, RARITY_LABELS, type Rarity } from '@/lib/types';
+import { formatUsd } from '@/lib/steam';
 
 export function rarityColor(r: Rarity) {
   return RARITY_COLORS[r];
@@ -9,5 +10,5 @@ export function rarityLabel(r: Rarity) {
 }
 
 export function formatCoins(n: number) {
-  return new Intl.NumberFormat('uz-UZ').format(n);
+  return formatUsd(n);
 }

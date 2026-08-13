@@ -6,22 +6,23 @@ export type Rarity =
   | 'legendary'
   | 'mythic';
 
+/** CS2-like rarity colors */
 export const RARITY_COLORS: Record<Rarity, string> = {
-  common: '#9AA3B2',
-  uncommon: '#3DDC97',
-  rare: '#3B82F6',
-  epic: '#A855F7',
-  legendary: '#F5C542',
-  mythic: '#FF3B5C',
+  common: '#b0c3d9',
+  uncommon: '#5e98d9',
+  rare: '#4b69ff',
+  epic: '#8847ff',
+  legendary: '#d32ce6',
+  mythic: '#eb4b4b',
 };
 
 export const RARITY_LABELS: Record<Rarity, string> = {
-  common: 'Common',
-  uncommon: 'Uncommon',
-  rare: 'Rare',
-  epic: 'Epic',
-  legendary: 'Legendary',
-  mythic: 'Mythic',
+  common: 'Consumer',
+  uncommon: 'Mil-Spec',
+  rare: 'Restricted',
+  epic: 'Classified',
+  legendary: 'Covert',
+  mythic: 'Extraordinary',
 };
 
 export const HOUSE_EDGE_TARGET = 0.88;
@@ -29,11 +30,16 @@ export const MARKET_FEE_RATE = 0.05;
 export const PITY_THRESHOLD = 20;
 export const PITY_BONUS = 0.015;
 
+export type ItemKind = 'skin' | 'knife' | 'glove' | 'sticker' | 'case';
+
 export interface ItemDef {
   id: string;
   name: string;
   rarity: Rarity;
+  /** Approximate Steam market USD */
   basePrice: number;
+  image: string;
+  kind?: ItemKind;
   caseId?: string;
 }
 
@@ -42,6 +48,7 @@ export interface CaseDef {
   name: string;
   price: number;
   description: string;
+  image: string;
   limited?: boolean;
   items: ItemDef[];
 }
@@ -52,6 +59,7 @@ export interface InventoryItem {
   name: string;
   rarity: Rarity;
   basePrice: number;
+  image: string;
   float: number;
   acquiredAt: string;
   source: 'case' | 'market' | 'upgrade';

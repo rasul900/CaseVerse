@@ -46,6 +46,7 @@ export type CaseCard = {
   name: string;
   price: number;
   description: string;
+  image?: string;
   limited?: boolean;
   itemCount: number;
   items: ItemDef[];

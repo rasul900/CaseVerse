@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { InventoryItem, ItemDef, MarketListing, OpenCaseResult, UserState } from '@/lib/types';
 import { client, type CaseCard } from '@/lib/client-api';
-import { formatCoins, rarityColor, rarityLabel } from '@/lib/format';
+import { formatCoins, rarityColor } from '@/lib/format';
 import { CaseOpenModal } from '@/components/CaseOpenModal';
 import { UpgradeWheel } from '@/components/UpgradeWheel';
 
@@ -87,7 +87,7 @@ export default function MiniApp() {
         const WebApp = mod.default;
         WebApp.ready();
         WebApp.expand();
-        WebApp.setHeaderColor('#0a0a0c');
+        WebApp.setHeaderColor('#070a08');
       } catch {
         /* browser preview */
       }
@@ -172,7 +172,7 @@ export default function MiniApp() {
 
   async function sellItem(item: InventoryItem) {
     try {
-      await client.listItem(item.instanceId, Math.max(1, Math.round(item.basePrice * 0.95)));
+      await client.listItem(item.instanceId, Math.max(0.01, Math.round(item.basePrice * 0.95 * 100) / 100));
       await refresh();
       if (tab === 'market') {
         const q = new URLSearchParams();
@@ -220,16 +220,18 @@ export default function MiniApp() {
                 onClick={() => handleOpen(c)}
               >
                 <div className="case-art">
-                  <div className="case-icon" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={c.image || c.items[0]?.image} alt={c.name} className="case-cover" />
                 </div>
                 <div className="case-body">
                   <h3>{c.name}</h3>
+                  <p className="case-desc">{c.description}</p>
                   <div className="case-meta">
-                    <span className="price-chip">{c.price}</span>
+                    <span className="price-chip">{formatCoins(c.price)}</span>
                     {c.limited ? (
                       <span className="badge">Limited</span>
                     ) : (
-                      <span className="case-count">{c.itemCount}</span>
+                      <span className="case-count">{c.itemCount} items</span>
                     )}
                   </div>
                   <span className="case-open-cta">Open</span>
@@ -265,7 +267,7 @@ export default function MiniApp() {
             <option value="">Tanlang...</option>
             {targets.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.name} · {rarityLabel(t.rarity)} · {t.basePrice}
+                {t.name} · {formatCoins(t.basePrice)}
               </option>
             ))}
           </select>
@@ -283,11 +285,10 @@ export default function MiniApp() {
                   style={{ borderColor: `${c}55` }}
                 >
                   <span className="check-mark">{on ? '✓' : ''}</span>
-                  <div className="swatch" style={{ background: `${c}22`, color: c, borderColor: c }}>
-                    {item.rarity.slice(0, 1).toUpperCase()}
-                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={item.image} alt="" className="cell-skin" />
                   <h4>{item.name}</h4>
-                  <div className="sub">{item.basePrice}</div>
+                  <div className="sub">{formatCoins(item.basePrice)}</div>
                 </button>
               );
             })}
@@ -312,11 +313,10 @@ export default function MiniApp() {
               const c = rarityColor(item.rarity);
               return (
                 <div key={item.instanceId} className="item-cell" style={{ borderColor: `${c}66` }}>
-                  <div className="swatch" style={{ background: `${c}22`, color: c, borderColor: c }}>
-                    {item.rarity.slice(0, 1).toUpperCase()}
-                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={item.image} alt="" className="cell-skin" />
                   <h4>{item.name}</h4>
-                  <div className="sub">{item.basePrice}</div>
+                  <div className="sub">{formatCoins(item.basePrice)}</div>
                   <div className="cell-actions">
                     <button className="btn ghost" type="button" onClick={() => sellItem(item)}>
                       Sotish
@@ -349,11 +349,10 @@ export default function MiniApp() {
               const c = rarityColor(l.instance.rarity);
               return (
                 <div key={l.id} className="item-cell" style={{ borderColor: `${c}66` }}>
-                  <div className="swatch" style={{ background: `${c}22`, color: c, borderColor: c }}>
-                    {l.instance.rarity.slice(0, 1).toUpperCase()}
-                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={l.instance.image} alt="" className="cell-skin" />
                   <h4>{l.instance.name}</h4>
-                  <div className="sub">{l.price}</div>
+                  <div className="sub">{formatCoins(l.price)}</div>
                   <div className="cell-actions">
                     <button className="btn" type="button" onClick={() => buyListing(l.id)}>
                       Buy
