@@ -74,9 +74,15 @@ export default function MiniApp() {
   const [rarityFilter, setRarityFilter] = useState('');
 
   async function refresh() {
-    const [me, cs] = await Promise.all([client.me(), client.cases()]);
-    setUser(me);
+    const cs = await client.cases();
     setCases(cs);
+    try {
+      const me = await client.me();
+      setUser(me);
+      setError(null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
   }
 
   useEffect(() => {
@@ -211,30 +217,28 @@ export default function MiniApp() {
       {tab === 'cases' && (
         <div className="tab-enter" key="cases">
           <p className="section-title">Cases</p>
-          <div className="case-grid">
+          <div className="case-list">
             {cases.map((c) => (
               <button
                 key={c.id}
                 type="button"
-                className={`case-tile ${c.limited ? 'limited' : ''}`}
+                className={`case-row ${c.limited ? 'limited' : ''}`}
                 onClick={() => handleOpen(c)}
               >
-                <div className="case-art">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={c.image || c.items[0]?.image} alt={c.name} className="case-cover" />
-                </div>
-                <div className="case-body">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={c.image || c.items[0]?.image} alt="" className="case-cover" />
+                <div className="case-info">
                   <h3>{c.name}</h3>
-                  <p className="case-desc">{c.description}</p>
-                  <div className="case-meta">
-                    <span className="price-chip">{formatCoins(c.price)}</span>
-                    {c.limited ? (
-                      <span className="badge">Limited</span>
-                    ) : (
-                      <span className="case-count">{c.itemCount} items</span>
-                    )}
+                  <div className="skin-preview">
+                    {c.items.slice(0, 5).map((it) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={it.id} src={it.image} alt="" />
+                    ))}
                   </div>
-                  <span className="case-open-cta">Open</span>
+                </div>
+                <div className="case-cta">
+                  <span className="price-chip">{formatCoins(c.price)}</span>
+                  <span className="case-open-cta">OPEN</span>
                 </div>
               </button>
             ))}

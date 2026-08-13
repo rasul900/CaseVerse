@@ -31,7 +31,7 @@ export const DEMO_CASES: CaseDef[] = [
     name: 'Dust II Essentials',
     price: 0.25,
     description: 'Budget rifles & pistols from the Dust map pool.',
-    image: steamImg('CS:GO Weapon Case'),
+    image: steamImg('Revolution Case'),
     items: [
       skin('d2-1', 'P250 | Sand Dune (Field-Tested)', 'common', 0.03, 'dust2-essentials'),
       skin('d2-2', 'MP7 | Groundwater (Field-Tested)', 'common', 0.04, 'dust2-essentials'),
@@ -49,7 +49,7 @@ export const DEMO_CASES: CaseDef[] = [
     name: 'Redline Armory',
     price: 2.75,
     description: 'Popular mid-tier skins — Redline, Asiimov vibes.',
-    image: steamImg('Chroma 2 Case'),
+    image: steamImg('Recoil Case'),
     items: [
       skin('ra-1', 'Tec-9 | Blue Titanium (Factory New)', 'common', 0.45, 'redline-armory'),
       skin('ra-2', 'Five-SeveN | Forest Night (Field-Tested)', 'common', 0.55, 'redline-armory'),
@@ -84,7 +84,7 @@ export const DEMO_CASES: CaseDef[] = [
     price: 4.75,
     limited: true,
     description: 'High risk — knives & gloves in the pool.',
-    image: steamImg('Operation Broken Fang Case'),
+    image: steamImg('Dreams & Nightmares Case'),
     items: [
       skin('kv-1', 'MP9 | Storm (Field-Tested)', 'common', 0.08, 'knife-vault'),
       skin('kv-2', 'P90 | Storm (Field-Tested)', 'common', 0.1, 'knife-vault'),
@@ -102,7 +102,7 @@ export const DEMO_CASES: CaseDef[] = [
     price: 3.25,
     limited: true,
     description: 'Gloves drop chance — Specialist & Sport gloves.',
-    image: steamImg('Glove Case'),
+    image: steamImg('Kilowatt Case'),
     items: [
       skin('gw-1', 'Dual Berettas | Contractor (Field-Tested)', 'common', 0.06, 'glove-war'),
       skin('gw-2', 'SCAR-20 | Contractor (Field-Tested)', 'common', 0.07, 'glove-war'),
