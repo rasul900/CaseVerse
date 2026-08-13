@@ -9,6 +9,35 @@ import { UpgradeWheel } from '@/components/UpgradeWheel';
 
 type Tab = 'cases' | 'upgrade' | 'inventory' | 'market';
 
+const RANK: Record<string, number> = {
+  common: 1,
+  uncommon: 2,
+  rare: 3,
+  epic: 4,
+  legendary: 5,
+  mythic: 6,
+};
+
+const CASE_SECTIONS = [
+  { id: 'budget', title: 'Byudjet', match: (c: CaseCard) => !c.limited && c.price < 1 },
+  { id: 'premium', title: 'Premium', match: (c: CaseCard) => !c.limited && c.price >= 1 },
+  { id: 'limited', title: 'Limited', match: (c: CaseCard) => !!c.limited },
+];
+
+function featuredItems(c: CaseCard) {
+  const sorted = [...c.items].sort((a, b) => (RANK[b.rarity] ?? 0) - (RANK[a.rarity] ?? 0));
+  const dual = sorted.some((i) => i.kind === 'knife' || i.kind === 'glove');
+  return sorted.slice(0, dual ? 2 : 1);
+}
+
+function shortCaseName(name: string) {
+  return name.replace(/\s+(Case|Pack|Capsule|Armory|Essentials)$/i, '');
+}
+
+function gemPrice(usd: number) {
+  return Math.round(usd * 1000).toLocaleString('ru-RU');
+}
+
 const NAV: { id: Tab; label: string; icon: ReactNode }[] = [
   {
     id: 'cases',
@@ -228,32 +257,58 @@ export default function MiniApp() {
       </header>
 
       {tab === 'cases' && (
-        <div className="tab-enter" key="cases">
-          <div className="case-grid">
-            {cases.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                className={`case-card ${c.limited ? 'limited' : ''}`}
-                onClick={() => handleOpen(c)}
-              >
-                {c.limited && <span className="badge">Limited</span>}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={c.image || c.items[0]?.image} alt="" className="case-cover" />
-                <h3>{c.name}</h3>
-                <div className="skin-preview">
-                  {c.items.slice(0, 4).map((it) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img key={it.id} src={it.image} alt="" />
-                  ))}
+        <div className="tab-enter case-shop" key="cases">
+          {CASE_SECTIONS.map((section) => {
+            const list = cases.filter(section.match);
+            if (!list.length) return null;
+            return (
+              <section key={section.id} className="case-section">
+                <h2 className="cat-head">{section.title}</h2>
+                <div className="case-grid">
+                  {list.map((c) => {
+                    const heroes = featuredItems(c);
+                    const glow = rarityColor(heroes[0]?.rarity ?? 'rare');
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className="case-card"
+                        style={{ ['--glow' as string]: glow }}
+                        onClick={() => handleOpen(c)}
+                      >
+                        <div className="case-stage">
+                          <span className="holo-beam" />
+                          <span className="holo-spark s1" />
+                          <span className="holo-spark s2" />
+                          <span className="holo-spark s3" />
+                          <div className="holo-pad">
+                            <i />
+                            <i />
+                            <i />
+                          </div>
+                          <div className={`case-hero ${heroes.length > 1 ? 'duo' : ''}`}>
+                            {heroes.map((it) => (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img key={it.id} src={it.image} alt="" />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="case-meta">
+                          <h3>{shortCaseName(c.name)}</h3>
+                          <p className="gem-price">
+                            {gemPrice(c.price)}
+                            <svg viewBox="0 0 16 16" aria-hidden>
+                              <path d="M8 1.15 14.7 8 8 14.85 1.3 8 8 1.15Z" />
+                            </svg>
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div className="case-cta">
-                  <span className="price-chip">{formatCoins(c.price)}</span>
-                  <span className="case-open-cta">OPEN</span>
-                </div>
-              </button>
-            ))}
-          </div>
+              </section>
+            );
+          })}
         </div>
       )}
 
